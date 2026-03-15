@@ -1,0 +1,17 @@
+# Build output
+dist/
+
+# Runtime config & state
+config.json
+app-update.json
+
+# App cache
+.icon-cache/
+
+# Local backups
+*.old
+
+# OS junk
+.DS_Store
+
+*.AppImage
