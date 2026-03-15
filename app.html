@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>应用镜像管理</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --bg: #f2f5f8;
+            --bg-accent: #e6edf5;
+            --card: #ffffff;
+            --text: #0e1a2b;
+            --muted: #6b7a8c;
+            --border: #d8e0ea;
+            --accent: #0f7b6c;
+            --accent-2: #114b5f;
+            --accent-3: #f2a154;
+            --danger: #c0392b;
+            --shadow: 0 20px 60px rgba(16, 24, 40, 0.12);
+            --radius: 14px;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0b0f14;
+                --bg-accent: #141b24;
+                --card: #10161d;
+                --text: #e6edf6;
+                --muted: #9fb0c3;
+                --border: #233041;
+                --accent: #27b39e;
+                --accent-2: #5ad2c7;
+                --accent-3: #f6b26b;
+                --danger: #ff6b5a;
+                --shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+            }
+        }
+        :root[data-theme="dark"] {
+            --bg: #0b0f14;
+            --bg-accent: #141b24;
+            --card: #10161d;
+            --text: #e6edf6;
+            --muted: #9fb0c3;
+            --border: #233041;
+            --accent: #27b39e;
+            --accent-2: #5ad2c7;
+            --accent-3: #f6b26b;
+            --danger: #ff6b5a;
+            --shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+        }
+        :root[data-theme="light"] {
+            --bg: #f2f5f8;
+            --bg-accent: #e6edf5;
+            --card: #ffffff;
+            --text: #0e1a2b;
+            --muted: #6b7a8c;
+            --border: #d8e0ea;
+            --accent: #0f7b6c;
+            --accent-2: #114b5f;
+            --accent-3: #f2a154;
+            --danger: #c0392b;
+            --shadow: 0 20px 60px rgba(16, 24, 40, 0.12);
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            font-family: "Space Grotesk", "Cabinet Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+            background: radial-gradient(1200px 600px at 10% -10%, var(--bg-accent), transparent),
+                        radial-gradient(900px 500px at 90% -20%, rgba(15, 123, 108, 0.18), transparent),
+                        var(--bg);
+            color: var(--text);
+            padding: 28px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--card);
+            padding: 24px 24px 28px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .title-block h1 {
+            margin: 0;
+            font-size: 28px;
+            letter-spacing: 0.4px;
+        }
+        .title-block p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .mirror-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 14px;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(15, 123, 108, 0.08), rgba(15, 123, 108, 0.02));
+        }
+        .settings-row {
+            display: grid;
+            grid-template-columns: 140px minmax(220px, 1.6fr) minmax(140px, 1fr);
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(17, 75, 95, 0.08);
+        }
+        :root[data-theme="dark"] .settings-row {
+            background: rgba(16, 22, 29, 0.6);
+            border-color: rgba(90, 210, 199, 0.15);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme]) .settings-row {
+                background: rgba(16, 22, 29, 0.6);
+                border-color: rgba(90, 210, 199, 0.15);
+            }
+        }
+        .settings-label {
+            font-weight: 600;
+            color: var(--muted);
+        }
+        .settings-field {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .settings-hint {
+            color: var(--muted);
+            font-size: 12px;
+        }
+        .mirror-input, .mirror-select {
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+        }
+        .mirror-input {
+            min-width: 0;
+            width: 100%;
+        }
+        .mirror-select {
+            min-width: 160px;
+        }
+        .theme-toggle {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .refresh-btn {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #ffffff;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            box-shadow: 0 10px 20px rgba(15, 123, 108, 0.2);
+        }
+        .refresh-btn:hover {
+            filter: brightness(1.03);
+        }
+        .status-message {
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+        }
+        #statusMessage {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 999;
+            max-width: 360px;
+        }
+        .success {
+            background-color: rgba(39, 179, 158, 0.12);
+            color: var(--accent-2);
+            border: 1px solid rgba(39, 179, 158, 0.25);
+        }
+        .error {
+            background-color: rgba(255, 107, 90, 0.12);
+            color: var(--danger);
+            border: 1px solid rgba(255, 107, 90, 0.35);
+        }
+        .table-wrap {
+            margin-top: 18px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            max-height: 520px;
+            overflow-y: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            background: linear-gradient(135deg, var(--bg-accent), var(--card));
+            color: var(--text);
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        tr:hover {
+            background-color: rgba(15, 123, 108, 0.06);
+        }
+        .file-icon {
+            width: 22px;
+            height: 22px;
+            margin-right: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .file-icon-img {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+        }
+        .file-icon-fallback {
+            font-size: 18px;
+        }
+        .file-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .directory {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .file {
+            color: var(--text);
+        }
+        .size {
+            text-align: right;
+            color: var(--muted);
+            font-variant-numeric: tabular-nums;
+        }
+        .update-url-input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text);
+        }
+        .action-btn {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            margin-right: 6px;
+        }
+        .action-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        .action-group {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 6px;
+            align-items: center;
+        }
+        td[data-label="操作"] {
+            overflow-x: auto;
+        }
+        .action-btn {
+            white-space: nowrap;
+        }
+        .action-btn.primary {
+            border-color: rgba(15, 123, 108, 0.4);
+            color: var(--accent-2);
+        }
+        .action-btn.warn {
+            border-color: rgba(255, 107, 90, 0.4);
+            color: var(--danger);
+        }
+        th.sortable {
+            cursor: pointer;
+        }
+        th.sortable::after {
+            content: attr(data-sort-indicator);
+            margin-left: 6px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        @media (max-width: 900px) {
+            body {
+                padding: 16px;
+            }
+            .container {
+                padding: 18px;
+            }
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            thead {
+                display: none;
+            }
+            tr {
+                border-bottom: 1px solid var(--border);
+                padding: 10px 0;
+            }
+            td {
+                border-bottom: none;
+                padding: 8px 10px;
+            }
+            td::before {
+                content: attr(data-label);
+                display: block;
+                color: var(--muted);
+                font-size: 12px;
+                margin-bottom: 4px;
+            }
+            .action-btn {
+                margin-bottom: 6px;
+            }
+            .settings-row {
+                grid-template-columns: 1fr;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="title-block">
+                <h1>应用镜像库</h1>
+                <p>集中管理、快速检查更新、直达下载</p>
+            </div>
+            <div class="actions">
+                <button class="refresh-btn" onclick="loadFileList()">刷新列表</button>
+                <button class="refresh-btn" onclick="checkAllUpdates()">检测更新</button>
+                <button class="refresh-btn" onclick="updateAll()">一键更新</button>
+                <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()">主题/自动</button>
+            </div>
+        </header>
+        <div class="mirror-bar">
+            <div class="settings-row">
+                <label class="settings-label" for="mirrorSelect">镜像</label>
+                <div class="settings-field">
+                    <select id="mirrorSelect" class="mirror-select" onchange="applyMirrorPreset()">
+                        <option value="">选择预设</option>
+                        <option value="cors.isteed.cc" selected>cors.isteed.cc</option>
+                        <option value="gh-proxy.com">gh-proxy.com</option>
+                    </select>
+                    <input id="mirrorInput" class="mirror-input" type="text" placeholder="支持填写或选择镜像地址" />
+                </div>
+                <div class="settings-hint" id="mirrorHint">仅用于下载加速，不影响 GitHub API</div>
+            </div>
+            <div class="settings-row">
+                <label class="settings-label" for="appimageDirInput">AppImage目录</label>
+                <div class="settings-field">
+                    <input id="appimageDirInput" class="mirror-input" type="text" placeholder="留空=当前目录" />
+                </div>
+                <div class="settings-hint" id="appimageDirHint"></div>
+            </div>
+            <div class="settings-row">
+                <label class="settings-label" for="tokenInput">GitHub Token</label>
+                <div class="settings-field">
+                    <input id="tokenInput" class="mirror-input" type="password" placeholder="可选，保存后生效" />
+                </div>
+                <div class="settings-hint" id="tokenHint">遇到 403 时填写</div>
+            </div>
+        </div>
+        <div id="statusMessage"></div>
+        <div class="table-wrap">
+        <table id="fileTable">
+            <thead>
+                <tr>
+                    <th data-sort="name" class="sortable">文件名</th>
+                    <th data-sort="size" class="sortable">大小</th>
+                    <th data-sort="mtime" class="sortable">修改时间</th>
+                    <th>更新地址</th>
+                    <th>新版本</th>
+                    <th>访问</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="fileList">
+                <tr>
+                    <td colspan="7">点击上方"刷新列表"按钮加载文件列表</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <script>
+        // 存储更新地址信息的数组
+        let updateUrls = [];
+        let activeUpdates = 0;
+        let currentFiles = [];
+        let sortState = { key: null, dir: 'asc' };
+
+        // 显示状态消息
+        function showStatusMessage(message, isSuccess) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status-message ' + (isSuccess ? 'success' : 'error');
+
+            // 3秒后自动隐藏消息
+            setTimeout(() => {
+                statusDiv.textContent = '';
+                statusDiv.className = '';
+            }, 3000);
+        }
+
+        // 从 app-update.json 加载更新地址信息
+        async function loadUpdateUrls() {
+            try {
+                const response = await fetch('/api/update-urls?ts=' + Date.now());
+                if (response.ok) {
+                    updateUrls = await response.json();
+                } else {
+                    showStatusMessage('加载更新地址失败', false);
+                }
+            } catch (e) {
+                console.error('加载更新地址出错:', e);
+                showStatusMessage('加载更新地址出错', false);
+            }
+        }
+
+        // 获取文件名的前缀（第一个分隔符之前的单词）
+        function getFilePrefix(fileName) {
+            // 使用 '-' 或 '_' 作为分隔符
+            const match = fileName.match(/^([^-_]+)[-_]/);
+            if (match) {
+                return match[1];
+            }
+            // 如果没有找到分隔符，则返回整个文件名
+            return fileName;
+        }
+
+        // 根据文件名查找更新地址
+        function getUpdateUrlForFile(fileName) {
+            const prefix = getFilePrefix(fileName);
+            const updateObj = updateUrls.find(update => update.name === prefix);
+            return updateObj ? updateObj.updateUrl || updateObj.remark || '' : '';
+        }
+
+        function isGithubUpdateUrl(updateUrl) {
+            if (!updateUrl) return false;
+            return updateUrl.includes('github.com/');
+        }
+
+        function sortFiles(files) {
+            const { key, dir } = sortState;
+            if (!key) return files;
+            const factor = dir === 'asc' ? 1 : -1;
+            return [...files].sort((a, b) => {
+                if (key === 'name') {
+                    return a.name.localeCompare(b.name) * factor;
+                }
+                if (key === 'size') {
+                    return ((a.size || 0) - (b.size || 0)) * factor;
+                }
+                if (key === 'mtime') {
+                    return ((a.mtime || 0) - (b.mtime || 0)) * factor;
+                }
+                return 0;
+            });
+        }
+
+        function updateSortIndicators() {
+            document.querySelectorAll('th.sortable').forEach((th) => {
+                const key = th.getAttribute('data-sort');
+                if (key === sortState.key) {
+                    th.setAttribute('data-sort-indicator', sortState.dir === 'asc' ? '▲' : '▼');
+                } else {
+                    th.setAttribute('data-sort-indicator', '');
+                }
+            });
+        }
+
+        function renderFileList(files) {
+            const fileListElement = document.getElementById('fileList');
+            fileListElement.innerHTML = '';
+
+            files.forEach(file => {
+                    const row = document.createElement('tr');
+
+                    // 文件名列
+                    const nameCell = document.createElement('td');
+                    nameCell.setAttribute('data-label', '文件名');
+                    const nameDiv = document.createElement('div');
+                    nameDiv.className = 'file-name';
+
+                    const icon = document.createElement('span');
+                    icon.className = 'file-icon';
+                    const iconImg = document.createElement('img');
+                    iconImg.className = 'file-icon-img';
+                    iconImg.alt = '';
+                    iconImg.loading = 'lazy';
+                    iconImg.src = file.iconUrl || '';
+                    const fallback = document.createElement('span');
+                    fallback.className = 'file-icon-fallback';
+                    fallback.textContent = file.type === 'directory' ? '📁' : '📦';
+                    iconImg.dataset.retry = '0';
+                    iconImg.onerror = function() {
+                        iconImg.style.display = 'none';
+                        const retryCount = Number(iconImg.dataset.retry || '0');
+                        if (retryCount < 3 && file.iconUrl) {
+                            iconImg.dataset.retry = String(retryCount + 1);
+                            const delay = 3000;
+                            setTimeout(() => {
+                                iconImg.style.display = '';
+                                const sep = file.iconUrl.includes('?') ? '&' : '?';
+                                iconImg.src = `${file.iconUrl}${sep}t=${Date.now()}`;
+                            }, delay);
+                        }
+                    };
+                    iconImg.onload = function() {
+                        fallback.style.display = 'none';
+                    };
+                    icon.appendChild(iconImg);
+                    icon.appendChild(fallback);
+
+                    const nameText = document.createElement('span');
+                    nameText.textContent = file.name;
+                    nameText.className = file.type === 'directory' ? 'directory' : 'file';
+
+                    nameDiv.appendChild(icon);
+                    nameDiv.appendChild(nameText);
+                    nameCell.appendChild(nameDiv);
+
+                    // 大小列
+                    const sizeCell = document.createElement('td');
+                    sizeCell.setAttribute('data-label', '大小');
+                    sizeCell.className = 'size';
+                    sizeCell.textContent = file.size !== "-" ? `${file.size} MB` : "-";
+
+                    // 修改时间列
+                    const timeCell = document.createElement('td');
+                    timeCell.setAttribute('data-label', '修改时间');
+                    const dt = new Date(file.mtime || 0);
+                    const y = dt.getFullYear();
+                    const m = String(dt.getMonth() + 1).padStart(2, '0');
+                    const d = String(dt.getDate()).padStart(2, '0');
+                    const hh = String(dt.getHours()).padStart(2, '0');
+                    const mm = String(dt.getMinutes()).padStart(2, '0');
+                    timeCell.textContent = file.mtime ? `${y}-${m}-${d} ${hh}:${mm}` : '-';
+
+                    // 更新地址列
+                    const updateUrlCell = document.createElement('td');
+                    updateUrlCell.setAttribute('data-label', '更新地址');
+                    const updateUrlInput = document.createElement('input');
+                    updateUrlInput.type = 'text';
+                    updateUrlInput.className = 'update-url-input';
+                    updateUrlInput.value = getUpdateUrlForFile(file.name);
+                    updateUrlInput.placeholder = '请输入更新地址';
+                    updateUrlInput.onchange = function() {
+                        updateUpdateUrl(file.name, this.value);
+                        const value = this.value.trim();
+                        accessButton.disabled = !value;
+                        const githubOk = isGithubUpdateUrl(value);
+                        checkButton.disabled = !githubOk;
+                        updateButton.disabled = !value;
+                        if (!githubOk && statusCell) {
+                            statusCell.textContent = '-';
+                        }
+                    };
+                    updateUrlCell.appendChild(updateUrlInput);
+
+                    // 访问按钮列
+                    // 更新状态列
+                    const statusCell = document.createElement('td');
+                    statusCell.setAttribute('data-label', '新版本');
+                    const cached = getCachedCheckResult(file.name);
+                    if (cached && typeof cached === 'object') {
+                        statusCell.textContent = cached.value || '-';
+                    } else {
+                        statusCell.textContent = cached || '-';
+                    }
+
+                    // 访问按钮列
+                    const accessCell = document.createElement('td');
+                    accessCell.setAttribute('data-label', '访问');
+                    const accessButton = document.createElement('button');
+                    accessButton.textContent = '访问';
+                    accessButton.className = 'action-btn primary';
+                    const currentUpdateUrl = getUpdateUrlForFile(file.name);
+                    accessButton.disabled = !currentUpdateUrl;
+                    accessButton.onclick = function() {
+                        const updateUrl = getUpdateUrlForFile(file.name);
+                        if (updateUrl) {
+                            window.open(updateUrl, '_blank');
+                        } else {
+                            alert('请先设置更新地址');
+                        }
+                    };
+                    accessCell.appendChild(accessButton);
+
+                    // 操作列
+                    const actionCell = document.createElement('td');
+                    actionCell.setAttribute('data-label', '操作');
+                    const actionGroup = document.createElement('div');
+                    actionGroup.className = 'action-group';
+                    const checkButton = document.createElement('button');
+                    checkButton.textContent = '检查更新';
+                    checkButton.className = 'action-btn primary';
+                    checkButton.disabled = !isGithubUpdateUrl(currentUpdateUrl);
+                    checkButton.onclick = function() {
+                        checkUpdate(file.name, statusCell, updateButton);
+                    };
+
+                    const updateButton = document.createElement('button');
+                    updateButton.textContent = '更新';
+                    updateButton.className = 'action-btn';
+                    updateButton.disabled = !currentUpdateUrl;
+                    if (cached && typeof cached === 'object' && cached.isLatest) {
+                        updateButton.disabled = true;
+                    }
+                    updateButton.onclick = function() {
+                        if (isGithubUpdateUrl(currentUpdateUrl)) {
+                            updateLatest(file.name, statusCell, updateButton);
+                        } else {
+                            const inputUrl = prompt('请输入更新下载地址（直链 .AppImage）', currentUpdateUrl || '');
+                            if (!inputUrl) return;
+                            updateLatest(file.name, statusCell, updateButton, { downloadUrl: inputUrl });
+                        }
+                    };
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = '删除文件';
+                    deleteButton.className = 'action-btn warn';
+                    deleteButton.onclick = function() {
+                        deleteFile(file.name);
+                    };
+
+                    if (file.hasBackup) {
+                        const restoreButton = document.createElement('button');
+                        restoreButton.textContent = '还原';
+                        restoreButton.className = 'action-btn';
+                        restoreButton.onclick = function() {
+                            restoreFile(file.name);
+                        };
+                        actionGroup.appendChild(restoreButton);
+                    }
+                    actionGroup.appendChild(checkButton);
+                    actionGroup.appendChild(updateButton);
+                    actionGroup.appendChild(deleteButton);
+                    actionCell.appendChild(actionGroup);
+
+                    row.appendChild(nameCell);
+                    row.appendChild(sizeCell);
+                    row.appendChild(timeCell);
+                    row.appendChild(updateUrlCell);
+                    row.appendChild(statusCell);
+                    row.appendChild(accessCell);
+                    row.appendChild(actionCell);
+
+                    fileListElement.appendChild(row);
+            });
+        }
+
+        // 从 JSON 文件加载文件列表
+        async function loadFileList() {
+            // 显示加载中状态
+            document.getElementById('fileList').innerHTML = '<tr><td colspan="7">加载中...</td></tr>';
+
+            try {
+                // 先加载备注信息
+                await loadUpdateUrls();
+
+                // 从 file_list.json 加载文件列表
+                const response = await fetch('/api/files?ts=' + Date.now());
+                if (!response.ok) {
+                    throw new Error('无法加载文件列表: ' + response.statusText);
+                }
+                const files = await response.json();
+                currentFiles = files;
+                renderFileList(sortFiles(currentFiles));
+
+            } catch (error) {
+                console.error('加载文件列表出错:', error);
+                document.getElementById('fileList').innerHTML = '<tr><td colspan="7">加载文件列表失败: ' + error.message + '</td></tr>';
+                showStatusMessage('加载文件列表失败: ' + error.message, false);
+            }
+        }
+
+        // 更新地址信息（只更新本地存储，不自动下载）
+        async function updateUpdateUrl(fileName, updateUrl) {
+            const prefix = getFilePrefix(fileName);
+            const updateObj = updateUrls.find(updateItem => updateItem.name === prefix);
+
+            if (updateObj) {
+                // 如果找到了匹配的对象，更新地址
+                updateObj.updateUrl = updateUrl;
+            } else {
+                // 如果没有找到匹配的对象，添加新对象
+                updateUrls.push({ name: prefix, updateUrl: updateUrl });
+            }
+
+            try {
+                const res = await fetch('/api/update-urls', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: prefix, updateUrl: updateUrl })
+                });
+                if (!res.ok) {
+                    throw new Error('保存更新地址失败');
+                }
+                showStatusMessage('更新地址已保存', true);
+            } catch (e) {
+                console.error('保存更新地址出错:', e);
+                showStatusMessage('保存更新地址出错', false);
+            }
+        }
+
+        async function deleteFile(fileName) {
+            if (!confirm(`确定要删除文件：${fileName} 吗？`)) return;
+            try {
+                const res = await fetch('/api/files/' + encodeURIComponent(fileName), { method: 'DELETE' });
+                if (!res.ok) {
+                    throw new Error('删除文件失败');
+                }
+                showStatusMessage('文件已删除', true);
+                await loadFileList();
+            } catch (e) {
+                console.error('删除文件出错:', e);
+                showStatusMessage('删除文件出错', false);
+            }
+        }
+
+        async function restoreFile(fileName) {
+            if (!confirm(`确定要还原旧版本：${fileName} 吗？`)) return;
+            try {
+                const res = await fetch('/api/restore', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ file: fileName })
+                });
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.error || '还原失败');
+                }
+                showStatusMessage('已还原旧版本', true);
+                await loadFileList();
+            } catch (e) {
+                console.error('还原出错:', e);
+                showStatusMessage('还原失败', false);
+            }
+        }
+
+        function loadCheckCache() {
+            try {
+                const raw = localStorage.getItem('checkCache');
+                return raw ? JSON.parse(raw) : {};
+            } catch {
+                return {};
+            }
+        }
+
+        function saveCheckCache(cache) {
+            localStorage.setItem('checkCache', JSON.stringify(cache));
+        }
+
+        function cacheCheckResult(fileName, value, isLatest) {
+            const cache = loadCheckCache();
+            cache[fileName] = { value, isLatest: !!isLatest, ts: Date.now() };
+            saveCheckCache(cache);
+        }
+
+        function getCachedCheckResult(fileName) {
+            const cache = loadCheckCache();
+            const entry = cache[fileName];
+            if (!entry) return null;
+            const age = Date.now() - entry.ts;
+            if (age > 10 * 60 * 1000) {
+                delete cache[fileName];
+                saveCheckCache(cache);
+                return null;
+            }
+            return entry;
+        }
+
+        async function checkUpdate(fileName, statusCell, updateButton) {
+            try {
+                statusCell.textContent = '检查中...';
+                const mirror = getCurrentMirror();
+                const res = await fetch('/api/check?file=' + encodeURIComponent(fileName) + '&mirror=' + encodeURIComponent(mirror));
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.error || '检查失败');
+                }
+                const data = await res.json();
+
+                if (data.status === 'no-update-url') {
+                    statusCell.textContent = '未设置';
+                    cacheCheckResult(fileName, '未设置', false);
+                    return;
+                }
+                if (data.status === 'unsupported-update-url') {
+                    statusCell.textContent = '不支持';
+                    cacheCheckResult(fileName, '不支持', false);
+                    return;
+                }
+                if (data.status === 'unknown') {
+                    const value = data.latestTag || data.latestVersion || '-';
+                    statusCell.textContent = value;
+                    cacheCheckResult(fileName, value, false);
+                    return;
+                }
+                const value = data.latestTag || data.latestVersion || '-';
+                const display = data.matchedInName ? `✓ ${value}` : value;
+                statusCell.textContent = display;
+                if (data.status === 'latest' && updateButton) {
+                    updateButton.disabled = true;
+                }
+                cacheCheckResult(fileName, display, data.status === 'latest');
+            } catch (e) {
+                console.error('检查更新出错:', e);
+                statusCell.textContent = '失败';
+                showStatusMessage(`检查失败: ${e.message || '未知错误'}`, false);
+            }
+        }
+
+        function formatBytes(bytes) {
+            if (bytes == null) return '-';
+            const mb = bytes / 1024 / 1024;
+            if (mb >= 1) return `${mb.toFixed(1)} MB`;
+            const kb = bytes / 1024;
+            return `${kb.toFixed(0)} KB`;
+        }
+
+        async function updateLatest(fileName, statusCell, updateButton, options = {}) {
+            try {
+                activeUpdates += 1;
+                if (statusCell) statusCell.textContent = '更新中...';
+                const mirror = getCurrentMirror();
+                const res = await fetch('/api/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ file: fileName, mirror, downloadUrl: options.downloadUrl || '' })
+                });
+                let data = null;
+                if (!res.ok) {
+                    data = await res.json().catch(() => ({}));
+                    const urlInfo = data && data.assetUrl ? ` ${data.assetUrl}` : '';
+                    throw new Error((data.error || '更新失败') + urlInfo);
+                }
+                data = await res.json();
+                const jobId = data.jobId;
+                if (!jobId) throw new Error('缺少任务ID');
+
+                if (updateButton) {
+                    updateButton.textContent = '取消';
+                    updateButton.onclick = function() {
+                        cancelUpdate(jobId, statusCell, updateButton);
+                    };
+                }
+
+                let done = false;
+                while (!done) {
+                    const jobRes = await fetch('/api/update/' + encodeURIComponent(jobId));
+                    if (!jobRes.ok) throw new Error('获取进度失败');
+                    const job = await jobRes.json();
+                    if (job.status === 'running') {
+                        if (statusCell) {
+                            if (!job.total && !job.received) {
+                                statusCell.textContent = '连接中...';
+                            } else if (job.total) {
+                                const percent = Math.min(100, Math.floor((job.received / job.total) * 100));
+                                statusCell.textContent = `更新中 ${percent}%`;
+                            } else {
+                                statusCell.textContent = `更新中 ${formatBytes(job.received)}`;
+                            }
+                        }
+                        await new Promise(r => setTimeout(r, 800));
+                        continue;
+                    }
+                    if (job.status === 'done') {
+                        if (statusCell) statusCell.textContent = '更新完成';
+                        showStatusMessage('更新完成', true);
+                        done = true;
+                        break;
+                    }
+                    if (job.status === 'canceled') {
+                        if (statusCell) statusCell.textContent = '已取消';
+                        showStatusMessage('已取消更新', true);
+                        done = true;
+                        break;
+                    }
+                    if (job.status === 'error') {
+                        const urlInfo = job.assetUrl ? ` ${job.assetUrl}` : '';
+                        throw new Error((job.message || '更新失败') + urlInfo);
+                    }
+                    done = true;
+                }
+                if (options.refresh !== false) {
+                    if (activeUpdates <= 1) {
+                        await loadFileList();
+                    }
+                }
+            } catch (e) {
+                console.error('更新出错:', e);
+                if (statusCell) statusCell.textContent = '更新失败';
+                showStatusMessage(`更新失败: ${e.message || '未知错误'}`, false);
+            } finally {
+                activeUpdates = Math.max(0, activeUpdates - 1);
+                if (updateButton) {
+                    updateButton.textContent = '更新';
+                    updateButton.onclick = function() {
+                        updateLatest(fileName, statusCell, updateButton);
+                    };
+                }
+            }
+        }
+
+        async function cancelUpdate(jobId, statusCell, updateButton) {
+            try {
+                if (statusCell) statusCell.textContent = '取消中...';
+                const res = await fetch('/api/update/cancel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jobId })
+                });
+                if (!res.ok) throw new Error('取消失败');
+                if (statusCell) statusCell.textContent = '已取消';
+                showStatusMessage('已取消更新', true);
+            } catch (e) {
+                console.error('取消更新出错:', e);
+                showStatusMessage('取消失败', false);
+            } finally {
+                if (updateButton) {
+                    updateButton.textContent = '更新';
+                    updateButton.onclick = function() {
+                        updateLatest(updateButton.closest('tr').querySelector('td[data-label="文件名"] span.file').textContent, statusCell, updateButton);
+                    };
+                }
+            }
+        }
+
+        async function checkAllUpdates() {
+            const rows = Array.from(document.querySelectorAll('#fileList tr'));
+            for (const row of rows) {
+                const nameCell = row.querySelector('td[data-label="文件名"] span.file');
+                const statusCell = row.querySelector('td[data-label="新版本"]');
+                const checkBtn = row.querySelector('td[data-label="操作"] .action-btn.primary');
+                if (!nameCell || !statusCell) continue;
+                if (checkBtn && checkBtn.disabled) continue;
+                const fileName = nameCell.textContent;
+                const updateBtn = row.querySelector('td[data-label="操作"] .action-btn:not(.primary):not(.warn)');
+                await checkUpdate(fileName, statusCell, updateBtn);
+            }
+        }
+
+        async function updateAll() {
+            const rows = Array.from(document.querySelectorAll('#fileList tr'));
+            for (const row of rows) {
+                const nameCell = row.querySelector('td[data-label="文件名"] span.file');
+                const updateBtn = row.querySelector('td[data-label="操作"] .action-btn:not(.primary):not(.warn)');
+                const statusCell = row.querySelector('td[data-label="新版本"]');
+                if (!nameCell) continue;
+                if (updateBtn && updateBtn.disabled) continue;
+                const fileName = nameCell.textContent;
+                await updateLatest(fileName, statusCell, updateBtn, { refresh: false });
+            }
+            await loadFileList();
+        }
+
+        function updateThemeButton(mode) {
+            const btn = document.getElementById('themeToggle');
+            if (!btn) return;
+            if (mode === 'dark') {
+                btn.textContent = '主题/暗色';
+            } else if (mode === 'light') {
+                btn.textContent = '主题/亮色';
+            } else {
+                btn.textContent = '主题/自动';
+            }
+        }
+
+        function applyTheme(mode) {
+            if (mode === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                document.documentElement.style.colorScheme = 'light';
+            } else if (mode === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.documentElement.style.colorScheme = 'dark';
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                document.documentElement.style.colorScheme = '';
+            }
+            if (mode) {
+                localStorage.setItem('theme', mode);
+            } else {
+                localStorage.removeItem('theme');
+            }
+            updateThemeButton(mode);
+        }
+
+        function toggleTheme() {
+            const current = localStorage.getItem('theme');
+            if (current === 'dark') {
+                applyTheme('light');
+            } else if (current === 'light') {
+                applyTheme(null);
+            } else {
+                applyTheme('dark');
+            }
+        }
+
+        function applyMirrorPreset() {
+            const select = document.getElementById('mirrorSelect');
+            const input = document.getElementById('mirrorInput');
+            if (!select || !input) return;
+            if (select.value) {
+                input.value = select.value;
+            }
+        }
+
+        function getCurrentMirror() {
+            const input = document.getElementById('mirrorInput');
+            return input ? input.value.trim() : '';
+        }
+
+        async function loadConfig() {
+            try {
+                const res = await fetch('/api/config');
+                if (!res.ok) return;
+                const data = await res.json();
+                const input = document.getElementById('mirrorInput');
+                const select = document.getElementById('mirrorSelect');
+                const value = (data.mirror || '').trim() || 'cors.isteed.cc';
+                if (input) {
+                    input.value = value;
+                    input.dataset.savedValue = value;
+                }
+                if (select) select.value = value;
+                const tokenInput = document.getElementById('tokenInput');
+                if (tokenInput) {
+                    tokenInput.value = (data.token || '').trim();
+                    tokenInput.dataset.tokenSource = data.tokenSource || '';
+                    tokenInput.dataset.savedConfig = (data.tokenSource === 'config' && data.tokenSet) ? '1' : '0';
+                }
+                const appimageDirInput = document.getElementById('appimageDirInput');
+                const appimageDirHint = document.getElementById('appimageDirHint');
+                if (appimageDirInput) {
+                    appimageDirInput.value = (data.appimageDir || '').trim();
+                    appimageDirInput.dataset.savedValue = (data.appimageDir || '').trim();
+                }
+                if (appimageDirHint) {
+                    appimageDirHint.textContent = data.appimageDir ? '目录已保存' : '默认当前目录';
+                }
+            } catch (e) {
+                console.error('加载配置失败:', e);
+            }
+        }
+
+        async function saveMirror() {
+            const input = document.getElementById('mirrorInput');
+            if (!input) return;
+            const value = (input.value || '').trim();
+            const savedValue = (input.dataset.savedValue || '').trim();
+            if (value === savedValue) return;
+            try {
+                const res = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mirror: value })
+                });
+                if (!res.ok) throw new Error('保存失败');
+                input.dataset.savedValue = value;
+                showStatusMessage('镜像已保存', true);
+            } catch (e) {
+                console.error('保存镜像失败:', e);
+                showStatusMessage('镜像保存失败', false);
+            }
+        }
+
+        async function saveToken() {
+            const input = document.getElementById('tokenInput');
+            if (!input) return;
+            const value = (input.value || '').trim();
+            const savedConfig = input.dataset.savedConfig === '1';
+            const tokenSource = input.dataset.tokenSource || '';
+            if (!value && !savedConfig) {
+                return;
+            }
+            try {
+                const res = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: value })
+                });
+                if (!res.ok) throw new Error('保存失败');
+                const data = await res.json().catch(() => ({}));
+                input.dataset.tokenSource = data.tokenSource || '';
+                input.dataset.savedConfig = (data.tokenSource === 'config' && data.tokenSet) ? '1' : '0';
+                if (tokenSource !== 'env' && !value) {
+                    showStatusMessage('Token 已清除', true);
+                } else {
+                    showStatusMessage('Token 已保存', true);
+                }
+            } catch (e) {
+                console.error('保存 Token 失败:', e);
+                showStatusMessage('Token 保存失败', false);
+            }
+        }
+
+        async function saveAppimageDir() {
+            const input = document.getElementById('appimageDirInput');
+            const hint = document.getElementById('appimageDirHint');
+            if (!input) return;
+            const value = (input.value || '').trim();
+            const savedValue = (input.dataset.savedValue || '').trim();
+            if (value === savedValue) return;
+            try {
+                const res = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ appimageDir: value })
+                });
+                if (!res.ok) throw new Error('保存失败');
+                const data = await res.json().catch(() => ({}));
+                if (hint) {
+                    hint.textContent = data.appimageDir ? '目录已保存' : '默认当前目录';
+                }
+                input.dataset.savedValue = value;
+                showStatusMessage('目录已保存', true);
+                await loadFileList();
+            } catch (e) {
+                console.error('保存目录失败:', e);
+                showStatusMessage('目录保存失败', false);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('theme');
+            if (saved) applyTheme(saved);
+            else updateThemeButton(null);
+            loadConfig();
+            const debounceMap = new Map();
+            const debounce = (key, fn, wait = 500) => {
+                if (debounceMap.has(key)) clearTimeout(debounceMap.get(key));
+                debounceMap.set(key, setTimeout(fn, wait));
+            };
+            const mirrorInput = document.getElementById('mirrorInput');
+            const mirrorSelect = document.getElementById('mirrorSelect');
+            const tokenInput = document.getElementById('tokenInput');
+            const appimageDirInput = document.getElementById('appimageDirInput');
+            if (mirrorInput) {
+                mirrorInput.addEventListener('input', () => debounce('mirror', saveMirror, 500));
+                mirrorInput.addEventListener('blur', () => saveMirror());
+            }
+            if (mirrorSelect) {
+                mirrorSelect.addEventListener('change', () => debounce('mirror', saveMirror, 200));
+            }
+            if (tokenInput) {
+                tokenInput.addEventListener('input', () => debounce('token', saveToken, 700));
+                tokenInput.addEventListener('blur', () => saveToken());
+            }
+            if (appimageDirInput) {
+                appimageDirInput.addEventListener('input', () => debounce('appdir', saveAppimageDir, 500));
+                appimageDirInput.addEventListener('blur', () => saveAppimageDir());
+            }
+            document.querySelectorAll('th.sortable').forEach((th) => {
+                th.addEventListener('click', () => {
+                    const key = th.getAttribute('data-sort');
+                    if (sortState.key === key) {
+                        sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        sortState.key = key;
+                        sortState.dir = 'asc';
+                    }
+                    updateSortIndicators();
+                    renderFileList(sortFiles(currentFiles));
+                });
+            });
+            updateSortIndicators();
+            loadFileList();
+        });
+    </script>
+</body>
+</html>
